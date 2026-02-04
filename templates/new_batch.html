@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h2 style="margin:0 0 12px 0;">Add Batch-Out Entry (Day 35)</h2>
+
+  {% if error %}
+    <div class="pill" style="background:#ffecec; border:1px solid #ffb4b4;">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('new_batch') }}">
+    <div class="formgrid">
+      <div>
+        <label>Date (Batch Out)</label>
+        <input type="date" name="out_date" required />
+      </div>
+
+      <div>
+        <label>Batch Number</label>
+        <input type="text" name="batch_no" placeholder="e.g. 0004" required />
+      </div>
+
+      <div>
+        <label>Input Birds (Start)</label>
+        <input type="number" name="input_birds" id="input_birds" required />
+      </div>
+
+      <div>
+        <label>Cull Birds (Final Out)</label>
+        <input type="number" name="cull_birds" id="cull_birds" required />
+        <div class="hint" id="mort_preview">Mortality auto: Input − Cull and %</div>
+      </div>
+
+      <div>
+        <label>Feed BB (kg) <span class="bbdot"></span></label>
+        <input type="number" step="0.01" name="feed_bb_kg" required />
+      </div>
+
+      <div>
+        <label>Feed BF (kg) <span class="bfdot"></span></label>
+        <input type="number" step="0.01" name="feed_bf_kg" required />
+      </div>
+
+      <div>
+        <label>Total Weight (kg)</label>
+        <input type="number" step="0.01" name="total_weight_kg" required />
+      </div>
+
+      <div>
+        <label>Profit per Bird (LKR) <span class="hint">(Input only)</span></label>
+        <input type="number" step="0.01" name="profit_per_bird_lkr" placeholder="e.g. 130" />
+      </div>
+
+      <div>
+        <label>Optional: Total Cost (LKR)</label>
+        <input type="number" step="0.01" name="total_cost_lkr" placeholder="optional" />
+      </div>
+
+      <div>
+        <label>Optional: Selling Price per kg (LKR)</label>
+        <input type="number" step="0.01" name="price_per_kg_lkr" placeholder="optional" />
+      </div>
+    </div>
+
+    <div style="margin-top:14px; display:flex; gap:10px;">
+      <button class="btn" type="submit">Save Batch</button>
+      <a class="btn ghost" href="{{ url_for('dashboard') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  const inp = document.getElementById("input_birds");
+  const cul = document.getElementById("cull_birds");
+  const mort = document.getElementById("mort_preview");
+
+  function updateMort(){
+    const a = parseFloat(inp.value || "0");
+    const b = parseFloat(cul.value || "0");
+    if (!a || !b) { mort.textContent = "Mortality auto: Input − Cull and %"; return; }
+    const m = Math.max(a - b, 0);
+    const pct = a ? (m / a * 100) : 0;
+    mort.textContent = `Mortality auto: ${m.toFixed(0)} birds (${pct.toFixed(2)}%)`;
+  }
+
+  inp.addEventListener("input", updateMort);
+  cul.addEventListener("input", updateMort);
+</script>
+
+{% endblock %}

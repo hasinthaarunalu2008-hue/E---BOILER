@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h2 style="margin:0 0 12px 0;">User License Control</h2>
+  <div class="muted">Master can create users, update passwords, and extend license in days.</div>
+
+  {% if error %}
+    <div class="pill" style="background:#ffecec; border:1px solid #ffb4b4; margin-top:10px;">{{ error }}</div>
+  {% endif %}
+  {% if success %}
+    <div class="pill" style="background:#e8f8ec; border:1px solid #9ed8ac; margin-top:10px;">{{ success }}</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3 style="margin:0 0 10px 0;">Create User</h3>
+  <form method="post" action="{{ url_for('manage_users') }}">
+    <input type="hidden" name="action" value="create_user" />
+    <div class="formgrid">
+      <div>
+        <label>Username</label>
+        <input type="text" name="username" placeholder="e.g. USER01" required />
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="text" name="password" required />
+      </div>
+      <div>
+        <label>License Days</label>
+        <input type="number" name="license_days" min="1" step="0.01" placeholder="e.g. 30" required />
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn" type="submit">Create User</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3 style="margin:0 0 10px 0;">All Accounts</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Role</th>
+        <th>License Expiry</th>
+        <th>Remaining</th>
+        <th>Created</th>
+        <th>Updated</th>
+        <th>Extend License (days)</th>
+        <th>Change Password</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.username }}</td>
+        <td>{{ u.role_label }}</td>
+        <td>
+          {% if u.role == "master" %}
+            N/A
+          {% elif u.license_expires_at is none %}
+            No expiry
+          {% else %}
+            {{ u.license_expires_at_text }}
+          {% endif %}
+        </td>
+        <td>
+          {% if u.role == "master" %}
+            N/A
+          {% elif u.license_expires_at is none %}
+            Unlimited
+          {% else %}
+            {{ u.license_remaining_days }} days
+          {% endif %}
+        </td>
+        <td>{{ u.created_by or "-" }}<div class="small">{{ u.created_at or "-" }}</div></td>
+        <td>{{ u.updated_by or "-" }}<div class="small">{{ u.updated_at or "-" }}</div></td>
+        <td>
+          {% if u.role == "user" %}
+          <form method="post" action="{{ url_for('manage_users') }}">
+            <input type="hidden" name="action" value="extend_license" />
+            <input type="hidden" name="username" value="{{ u.username }}" />
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="number" name="license_days" min="0.01" step="0.01" style="min-width:120px;" required />
+              <button class="btn ghost" type="submit">Extend</button>
+            </div>
+          </form>
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('manage_users') }}">
+            <input type="hidden" name="action" value="update_password" />
+            <input type="hidden" name="username" value="{{ u.username }}" />
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="text" name="password" style="min-width:120px;" required />
+              <button class="btn ghost" type="submit">Update</button>
+            </div>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h2 style="margin:0 0 10px 0;">BROILER BATCH REPORT (OFFLINE)</h2>
+  <div class="small">
+    <b>Batch:</b> {{ r.batch_no }} &nbsp; | &nbsp;
+    <b>Date:</b> {{ r.out_date }} &nbsp; | &nbsp;
+    <b>Age:</b> 35 days
+  </div>
+  <div class="small" style="margin-top:4px;">
+    <b>Previous batch:</b>
+    {% if prev %}
+      {{ prev.batch_no }} &nbsp; | &nbsp; <b>Date:</b> {{ prev.out_date }}
+      {% if days_since_prev is not none %} &nbsp; | &nbsp; <b>Gap:</b> {{ days_since_prev }} days{% endif %}
+    {% else %}
+      -
+    {% endif %}
+  </div>
+  {% if can_manage_users %}
+  <div class="small" style="margin-top:4px;">
+    <b>Added by:</b> {{ r.created_by or "-" }} ({{ r.created_at or "-" }})
+    &nbsp; | &nbsp;
+    <b>Updated by:</b> {{ r.updated_by or "-" }} ({{ r.updated_at or "-" }})
+  </div>
+  {% endif %}
+
+  <div style="margin-top:16px;">
+    <div class="k">KPI Snapshot</div>
+    <div style="border-top:1px solid #e6e6e6; margin:6px 0 8px 0;"></div>
+    <table>
+      <tbody>
+        <tr><td>Avg Weight / bird (kg)</td><td style="text-align:right; font-weight:700;">{{ "%.3f"|format(k.avg_weight_per_bird_kg) }}</td></tr>
+        <tr><td>FCR</td><td style="text-align:right; font-weight:700;">{{ "%.2f"|format(k.fcr) }}</td></tr>
+        <tr><td>Mortality %</td><td style="text-align:right; font-weight:700;">{{ "%.2f"|format(k.mortality_pct*100) }}%</td></tr>
+        <tr><td>PI</td><td style="text-align:right; font-weight:700;">{{ "%.0f"|format(k.pi) }}</td></tr>
+        <tr><td>Score</td><td style="text-align:right; font-weight:700;">{{ "%.1f"|format(k.score) }}/100</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:14px;">
+    <div class="k">Birds Summary</div>
+    <div style="border-top:1px solid #e6e6e6; margin:6px 0 8px 0;"></div>
+    <table>
+      <tbody>
+        <tr><td>Input birds (start)</td><td style="text-align:right; font-weight:700;">{{ "{:,}".format(r.input_birds) }}</td></tr>
+        <tr><td>Cull birds (final out)</td><td style="text-align:right; font-weight:700;">{{ "{:,}".format(r.cull_birds) }}</td></tr>
+        <tr><td>Mortality birds (auto)</td><td style="text-align:right; font-weight:700;">{{ "{:,}".format(k.mortality_birds) }}</td></tr>
+        <tr><td>Livability %</td><td style="text-align:right; font-weight:700;">{{ "%.2f"|format(k.livability_pct) }}%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:14px;">
+    <div class="k">Feed Summary</div>
+    <div style="border-top:1px solid #e6e6e6; margin:6px 0 8px 0;"></div>
+    <table>
+      <tbody>
+        <tr><td>Feed BB (kg)</td><td style="text-align:right; font-weight:700;">{{ "{:,.0f}".format(r.feed_bb_kg) }}</td></tr>
+        <tr><td>Feed BF (kg)</td><td style="text-align:right; font-weight:700;">{{ "{:,.0f}".format(r.feed_bf_kg) }}</td></tr>
+        <tr><td>Total feed (kg)</td><td style="text-align:right; font-weight:700;">{{ "{:,.0f}".format(k.total_feed_kg) }}</td></tr>
+        <tr><td>Avg feed / bird (kg)</td><td style="text-align:right; font-weight:700;">{{ "%.3f"|format(k.avg_feed_per_bird_kg) }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:14px;">
+    <div class="k">Weight + Finance</div>
+    <div style="border-top:1px solid #e6e6e6; margin:6px 0 8px 0;"></div>
+    <table>
+      <tbody>
+        <tr><td>Total weight (kg)</td><td style="text-align:right; font-weight:700;">{{ "{:,.0f}".format(r.total_weight_kg) }}</td></tr>
+        <tr>
+          <td>Profit per bird (LKR) [manual]</td>
+          <td style="text-align:right; font-weight:700;">
+            {% if k.profit_per_bird_lkr is not none %}
+              {{ "%.2f"|format(k.profit_per_bird_lkr) }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:12px; display:flex; gap:10px;">
+    <a class="btn" href="{{ url_for('batch_pdf', batch_id=r.id) }}">Download PDF</a>
+    {% if can_edit %}
+    <a class="btn ghost" href="{{ url_for('edit_batch', batch_id=r.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('delete_batch', batch_id=r.id) }}" onsubmit="return confirm('Delete this batch record?');" style="margin:0;">
+      <button class="btn danger" type="submit">Delete</button>
+    </form>
+    {% endif %}
+    <a class="btn ghost" href="{{ url_for('dashboard') }}">Back</a>
+  </div>
+</div>
+
+{% endblock %}

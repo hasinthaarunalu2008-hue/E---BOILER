@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ title }}</title>
+  <style>
+    :root{
+      --bg:#f4f8ef;
+      --bg2:#edf4ff;
+      --card:#ffffffcc;
+      --line:#d9e3d3;
+      --muted:#4f5c4f;
+      --brand:#1e6b3a;
+      --brandDark:#154d2a;
+      --btn:#1e6b3a;
+      --btnText:#fff;
+      --pill:#eef5ea;
+      --accent:#2f80ed;
+      --accentSoft:#d9e9ff;
+      --bb:#dff7df;    /* light green */
+      --bf:#7a2e2e;    /* maroon */
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: "Trebuchet MS", "Segoe UI", "Candara", sans-serif;
+      background:
+        radial-gradient(1000px 500px at 10% -5%, #dbf4d9 0%, transparent 65%),
+        radial-gradient(1000px 450px at 92% -10%, #deebff 0%, transparent 60%),
+        linear-gradient(145deg, var(--bg), var(--bg2));
+      background-attachment: fixed;
+      color:#132013;
+    }
+    .wrap{ max-width:1100px; margin:0 auto; padding:22px; }
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      padding:14px 16px; border:1px solid #d2e2cf; border-radius:18px;
+      background:linear-gradient(135deg, #ffffffd9, #f4faefeb);
+      box-shadow:0 14px 28px -24px #0c3f1f;
+      backdrop-filter: blur(4px);
+    }
+    .title{
+      font-size:28px;
+      font-weight:900;
+      letter-spacing:.2px;
+      background: linear-gradient(90deg, #174f2a, #2f80ed);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .sub{ color:var(--muted); margin-top:6px; }
+    .actions{ display:flex; gap:10px; align-items:center; }
+    .inline{ margin:0; display:inline; }
+    .btn{
+      border:1px solid var(--brand); background:var(--btn); color:var(--btnText);
+      padding:8px 12px; border-radius:10px; text-decoration:none; font-weight:700;
+      display:inline-block;
+      transition:transform .18s ease, box-shadow .18s ease, background .2s ease, color .2s ease;
+      box-shadow:0 10px 22px -18px #0d421f;
+    }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 14px 24px -20px #0d421f; text-decoration:none; }
+    .btn.ghost{ background:#fff; color:#163519; border-color:#cbd8c8; }
+    .btn.ghost:hover{ background:#f2f8f0; }
+    .btn.danger{ background:#b42318; border-color:#b42318; color:#fff; }
+    .btn.danger:hover{ background:#8f1c13; border-color:#8f1c13; }
+    .card{
+      border:1px solid var(--line); border-radius:16px; background:var(--card);
+      padding:16px; margin-top:16px;
+      box-shadow:0 20px 30px -28px #163f2a;
+      backdrop-filter: blur(3px);
+      transition:transform .22s ease, box-shadow .22s ease;
+    }
+    .card:hover{ transform:translateY(-2px); box-shadow:0 24px 34px -26px #113b27; }
+    .grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; }
+    .k{ color:var(--muted); font-size:12px; font-weight:700; text-transform:uppercase; }
+    .small{ color:var(--muted); font-size:13px; margin-top:6px; }
+    table{ width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; }
+    th, td{ border-bottom:1px solid var(--line); padding:10px 8px; text-align:left; font-size:14px; }
+    th{
+      color:#284228;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      background:linear-gradient(180deg, #f4faef, #edf6ee);
+      position:sticky;
+      top:0;
+    }
+    tbody tr:nth-child(odd){ background:#fcfffb; }
+    tbody tr:hover{ background:#eef6ff; transition:background .15s ease; }
+    a{ color:#0b57d0; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+    .pill{
+      display:inline-flex; gap:6px; align-items:center; background:var(--pill); padding:4px 10px;
+      border-radius:999px; font-size:12px; margin:2px 4px 2px 0; border:1px solid #dfe8da;
+    }
+    .muted{ color:var(--muted); }
+    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    canvas{ width:100%; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow: inset 0 1px 0 #fff; }
+    .formgrid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; }
+    label{ display:block; font-weight:700; margin-bottom:6px; }
+    input{
+      width:100%; padding:10px; border:1px solid var(--line); border-radius:12px; font-size:14px;
+      background:#fbfef9;
+      transition:border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+    }
+    input:focus{ outline:none; border-color:#7fb189; box-shadow:0 0 0 3px #d5ead8; transform:translateY(-1px); }
+    .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
+    .sig-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .sig-item{ border:1px solid var(--line); border-radius:12px; padding:12px; background:#fafafa; }
+    .sig-item .k{ margin-bottom:6px; }
+    .bbdot{ display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--bb); border:1px solid #77c977; vertical-align:middle; margin-left:6px;}
+    .bfdot{ display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--bf); border:1px solid #3a0f0f; vertical-align:middle; margin-left:6px;}
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr 1fr; }
+      .formgrid{ grid-template-columns:1fr; }
+      .row2{ grid-template-columns:1fr; }
+      .sig-grid{ grid-template-columns:1fr; }
+    }
+
+    .reveal{
+      opacity:0;
+      transform:translateY(18px);
+      transition:opacity .55s ease, transform .55s ease;
+    }
+    .reveal.in{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .btn, .card, input, .reveal{ transition:none !important; transform:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="title">{{ title }}</div>
+        <div class="sub">
+          Offline
+          {% if current_user %}
+            | {{ current_user.role_label }}: {{ current_user.username }}
+            {% if current_user.role != "master" and current_user.license_remaining_days is not none %}
+              | License: {{ current_user.license_remaining_days }} days left
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="actions">
+        {% if current_user %}
+        <a class="btn" href="{{ url_for('new_batch') }}">+ Add Batch</a>
+        <a class="btn ghost" href="{{ url_for('dashboard') }}">Dashboard</a>
+        {% if can_manage_users %}
+        <a class="btn ghost" href="{{ url_for('manage_users') }}">Users</a>
+        {% endif %}
+        <a class="btn ghost" href="{{ url_for('about') }}">About</a>
+        <form class="inline" method="post" action="{{ url_for('logout') }}">
+          <button class="btn ghost" type="submit">Logout</button>
+        </form>
+        {% else %}
+        <a class="btn" href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+        <button class="btn ghost" type="button" id="exit-app">Exit</button>
+      </div>
+    </div>
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <div style="max-width:1100px; margin:0 auto; padding:0 22px 18px 22px;">
+    <div class="muted" style="border-top:1px solid var(--line); padding-top:10px; font-size:12px; text-align:center;">
+      © 2026 E-Broiler Dashboard | Developed by Hasintha Arunalu | RTX Technologies. All rights reserved.
+    </div>
+  </div>
+
+  <script>
+    // Soft staggered reveal animation for cards/blocks.
+    const revealNodes = document.querySelectorAll(".card, .topbar, table tbody tr");
+    revealNodes.forEach((el, i) => {
+      el.classList.add("reveal");
+      el.style.transitionDelay = `${Math.min(i * 35, 240)}ms`;
+      requestAnimationFrame(() => el.classList.add("in"));
+    });
+
+    // Attempt to stop the local server when the window/tab closes.
+    window.addEventListener("pagehide", (e) => {
+      if (e.persisted) return; // ignore bfcache
+      try { navigator.sendBeacon("/shutdown"); } catch (err) {}
+    });
+
+    // Manual exit button for the EXE build.
+    const exitBtn = document.getElementById("exit-app");
+    if (exitBtn) {
+      exitBtn.addEventListener("click", () => {
+        try { navigator.sendBeacon("/shutdown"); } catch (err) {}
+        try { window.close(); } catch (err) {}
+      });
+    }
+  </script>
+</body>
+</html>

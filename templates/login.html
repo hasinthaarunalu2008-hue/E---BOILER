@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card" style="max-width:480px; margin:16px auto 0 auto;">
+  <h2 style="margin:0 0 12px 0;">Login</h2>
+  <div class="muted" style="margin-bottom:12px;">Sign in to access the dashboard.</div>
+
+  {% if error %}
+    <div class="pill" style="background:#ffecec; border:1px solid #ffb4b4; margin-bottom:12px;">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('login') }}">
+    <div style="margin-bottom:10px;">
+      <label>Username</label>
+      <input type="text" name="username" autocomplete="username" required />
+    </div>
+    <div style="margin-bottom:14px;">
+      <label>Password</label>
+      <input type="password" name="password" autocomplete="current-password" required />
+    </div>
+    <button class="btn" type="submit">Login</button>
+  </form>
+</div>
+
+{% endblock %}

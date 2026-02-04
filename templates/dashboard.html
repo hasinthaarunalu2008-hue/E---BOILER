@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if stats %}
+<div class="card">
+  <div class="grid">
+    <div>
+      <div class="k">Total Batches</div>
+      <div style="font-size:20px; font-weight:800">{{ stats.total }}</div>
+      <div class="small">Best overall score: Batch {{ stats.best_score }}</div>
+    </div>
+    <div>
+      <div class="k">Best FCR</div>
+      <div style="font-size:16px; font-weight:800">Batch {{ stats.best_fcr }}</div>
+    </div>
+    <div>
+      <div class="k">Best PI</div>
+      <div style="font-size:16px; font-weight:800">Batch {{ stats.best_pi }}</div>
+    </div>
+    <div>
+      <div class="k">Lowest Mortality</div>
+      <div style="font-size:16px; font-weight:800">Batch {{ stats.lowest_mort }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if chart %}
+<div class="card">
+  <h3 style="margin:0 0 10px 0;">Trend Charts 📈📉 (Batch vs Batch)</h3>
+
+  <div class="row2">
+    <canvas id="c_avgw" height="170"></canvas>
+    <canvas id="c_fcr" height="170"></canvas>
+  </div>
+
+  <div class="row2" style="margin-top:12px">
+    <canvas id="c_mort" height="170"></canvas>
+    <canvas id="c_pi" height="170"></canvas>
+  </div>
+
+  <div class="muted" style="margin-top:10px">
+    Avg Weight ↑ good • FCR ↓ good • Mortality ↓ good • PI ↑ good
+  </div>
+
+  <!-- VS Code-safe JSON embed -->
+  <script id="chart-data" type="application/json">{{ chart|tojson }}</script>
+
+  <script>
+    const CHART = JSON.parse(document.getElementById("chart-data").textContent);
+
+    function drawLine(canvasId, labels, values, title, suffix="") {
+      const c = document.getElementById(canvasId);
+      const ctx = c.getContext("2d");
+
+      const W = c.width = c.clientWidth;
+      const H = c.height;
+
+      const padL = 55, padR = 20, padT = 30, padB = 60;
+
+      ctx.clearRect(0,0,W,H);
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "#111";
+      ctx.fillText(title, 12, 18);
+
+      if (!values || values.length === 0) return;
+
+      const minV = Math.min(...values);
+      const maxV = Math.max(...values);
+      const span = (maxV - minV) || 1;
+      const avgV = values.reduce((a,b)=>a+b,0) / values.length;
+
+      // grid
+      ctx.strokeStyle = "#eee";
+      ctx.lineWidth = 1;
+      for (let i=0;i<=4;i++){
+        const y = padT + (H-padT-padB)*(i/4);
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+      }
+
+      // y labels
+      ctx.fillStyle = "#666";
+      ctx.fillText(maxV.toFixed(2)+suffix, 8, padT+5);
+      ctx.fillText(minV.toFixed(2)+suffix, 8, H-padB);
+
+      const n = values.length;
+      const xs = [];
+      const ys = [];
+      for (let i=0;i<n;i++){
+        const x = padL + (W-padL-padR) * (n===1 ? 0 : i/(n-1));
+        const y = padT + (H-padT-padB) * (1 - ((values[i]-minV)/span));
+        xs.push(x); ys.push(y);
+      }
+
+      const trendUp = values.length >= 2 ? (values[values.length - 1] - avgV) >= 0 : true;
+      const color = trendUp ? "#1a73e8" : "#d93025";
+
+      // line
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(xs[0], ys[0]);
+      for (let i=1;i<n;i++) ctx.lineTo(xs[i], ys[i]);
+      ctx.stroke();
+
+      // dots (blue = above average, red = below average)
+      for (let i=0;i<n;i++){
+        const dotColor = values[i] >= avgV ? "#1a73e8" : "#d93025";
+        ctx.fillStyle = dotColor;
+        ctx.beginPath(); ctx.arc(xs[i], ys[i], 3, 0, Math.PI*2); ctx.fill();
+      }
+
+      // x labels (batch numbers)
+      ctx.fillStyle = "#666";
+      const maxLabels = 10;
+      const step = n <= maxLabels ? 1 : Math.ceil(n / maxLabels);
+      ctx.save();
+      ctx.translate(0, 0);
+      ctx.font = "11px Arial";
+      for (let i=0;i<n;i+=step){
+        const label = labels[i];
+        const x = xs[i];
+        ctx.save();
+        ctx.translate(x, H-8);
+        ctx.rotate(-0.4);
+        ctx.fillText(label, -6, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // avg line marker
+      const avgY = padT + (H-padT-padB) * (1 - ((avgV - minV) / span));
+      ctx.strokeStyle = "#bbb";
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(padL, avgY); ctx.lineTo(W-padR, avgY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#888";
+      ctx.fillText("avg", W-padR-24, avgY-4);
+    }
+
+    drawLine("c_avgw", CHART.labels, CHART.avg_w, "Avg Weight (kg)", " kg");
+    drawLine("c_fcr",  CHART.labels, CHART.fcr,   "FCR", "");
+    drawLine("c_mort", CHART.labels, CHART.mort,  "Mortality (%)", "%");
+    drawLine("c_pi",   CHART.labels, CHART.pi,    "Production Index (PI)", "");
+  </script>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3 style="margin:0 0 10px 0;">Batch History (latest first)</h3>
+
+  {% if rows|length == 0 %}
+    <div class="muted">No batches yet. Click “+ Add Batch”.</div>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Batch</th>
+        <th>Date</th>
+        <th>Avg Wt (kg)</th>
+        <th>FCR</th>
+        <th>Mortality %</th>
+        <th>PI</th>
+        <th>Score</th>
+        {% if can_manage_users %}
+        <th>Added By</th>
+        <th>Updated By</th>
+        {% endif %}
+        <th>Trend</th>
+        {% if can_edit %}
+        <th>Edit</th>
+        <th>Delete</th>
+        {% endif %}
+        <th>PDF</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for x in rows %}
+        {% set r = x.row %}
+        {% set k = x.kpi %}
+        <tr>
+          <td><a href="{{ url_for('view_batch', batch_id=r.id) }}">{{ r.batch_no }}</a></td>
+          <td>{{ r.out_date }}</td>
+          <td>{{ "%.3f"|format(k.avg_weight_per_bird_kg) }}</td>
+          <td>{{ "%.2f"|format(k.fcr) }}</td>
+          <td>{{ "%.2f"|format(k.mortality_pct*100) }}%</td>
+          <td>{{ "%.0f"|format(k.pi) }}</td>
+          <td>{{ "%.1f"|format(k.score) }}</td>
+          {% if can_manage_users %}
+          <td>
+            {{ r.created_by or "-" }}
+            <div class="small">{{ r.created_at or "-" }}</div>
+          </td>
+          <td>
+            {{ r.updated_by or "-" }}
+            <div class="small">{{ r.updated_at or "-" }}</div>
+          </td>
+          {% endif %}
+
+          <td>
+            {% if x.trend %}
+              <span class="pill">Wt {{ "↑" if x.trend.d_w >= 0 else "↓" }} {{ "%.3f"|format(x.trend.d_w) }}</span>
+              <span class="pill">FCR {{ "↓" if x.trend.d_fcr <= 0 else "↑" }} {{ "%.3f"|format(x.trend.d_fcr) }}</span>
+              <span class="pill">Mort {{ "↓" if x.trend.d_mort <= 0 else "↑" }} {{ "%.2f"|format(x.trend.d_mort) }}%</span>
+              <span class="pill">PI {{ "↑" if x.trend.d_pi >= 0 else "↓" }} {{ "%.0f"|format(x.trend.d_pi) }}</span>
+            {% else %}
+              <span class="pill">— first batch —</span>
+            {% endif %}
+          </td>
+
+          {% if can_edit %}
+          <td>
+            <a class="btn ghost" href="{{ url_for('edit_batch', batch_id=r.id) }}">Edit</a>
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('delete_batch', batch_id=r.id) }}" onsubmit="return confirm('Delete this batch record?');">
+              <button class="btn danger" type="submit">Delete</button>
+            </form>
+          </td>
+          {% endif %}
+
+          <td>
+            <a class="btn ghost" href="{{ url_for('batch_pdf', batch_id=r.id) }}">PDF</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+{% endblock %}
